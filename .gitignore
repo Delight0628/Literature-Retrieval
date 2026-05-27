@@ -1,0 +1,53 @@
+# 依赖目录
+node_modules/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# 环境文件
+.env
+.env.local
+.env.*.local
+venv/
+.venv/
+env/
+
+# IDE 配置
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# 日志和临时文件
+*.log
+logs/
+tmp/
+temp/
+.cache/
+
+# 构建产物
+*.min.js
+*.min.css
+*.map
+*.bundle.js
+
+# Claude Code 配置
+.claude/
+
+# Git
+.git/
+
+# 其他
+*.md
+!README.md
+LICENSE
+LICENSE.txt
