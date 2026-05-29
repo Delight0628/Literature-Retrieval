@@ -10,6 +10,9 @@ dist/
 build/
 .eggs/
 
+# Python 编译缓存
+**/__pycache__/
+
 # 环境文件
 .env
 .env.local

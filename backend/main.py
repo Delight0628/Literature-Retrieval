@@ -9,6 +9,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from api.search import router as search_router
+from api.knowledge import router as knowledge_router
 from dotenv import load_dotenv
 
 load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '.env'))
@@ -30,6 +31,7 @@ app.add_middleware(
 
 # 注册路由
 app.include_router(search_router)
+app.include_router(knowledge_router)
 
 
 @app.get("/")
