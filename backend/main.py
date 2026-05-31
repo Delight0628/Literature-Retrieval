@@ -46,4 +46,22 @@ async def health():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    import socket
+
+    def find_available_port(start_port, host="0.0.0.0"):
+        """从 start_port 开始依次尝试，找到第一个可用端口"""
+        port = start_port
+        while port < start_port + 100:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                try:
+                    s.bind((host, port))
+                    return port
+                except OSError:
+                    port += 1
+        raise RuntimeError(f"在 {start_port}-{start_port + 99} 范围内未找到可用端口")
+
+    target_port = find_available_port(8002)
+    if target_port != 8002:
+        print(f"[WARNING] 默认端口 8002 被占用，切换到端口 {target_port}")
+    print(f"[INFO] 后端服务启动于 http://0.0.0.0:{target_port}")
+    uvicorn.run(app, host="0.0.0.0", port=target_port)
