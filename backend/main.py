@@ -37,6 +37,13 @@ async def health():
     return {"status": "ok"}
 
 
+@app.post("/api/test")
+async def test_endpoint(data: dict):
+    """测试端点：用于调试请求体解析问题"""
+    print(f"[DEBUG] 收到测试请求: {data}")
+    return {"received": data, "status": "ok"}
+
+
 # 注册 API 路由
 app.include_router(search_router)
 app.include_router(knowledge_router)
