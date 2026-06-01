@@ -42,7 +42,16 @@ app.include_router(search_router)
 app.include_router(knowledge_router)
 
 # 静态文件目录（前端构建产物）
-STATIC_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'frontend', 'dist')
+# 优先使用环境变量，否则使用相对路径（本地开发）
+STATIC_DIR = os.environ.get('STATIC_DIR', os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'frontend', 'dist'))
+
+# Railway 部署时的备用路径
+if not os.path.exists(STATIC_DIR):
+    STATIC_DIR = '/app/dist'
+
+# 打印静态文件目录路径（调试用）
+print(f"[INFO] 静态文件目录: {STATIC_DIR}")
+print(f"[INFO] 静态文件目录存在: {os.path.exists(STATIC_DIR)}")
 
 # 如果静态文件目录存在，挂载静态文件服务
 if os.path.exists(STATIC_DIR):
@@ -50,6 +59,12 @@ if os.path.exists(STATIC_DIR):
     assets_dir = os.path.join(STATIC_DIR, "assets")
     if os.path.exists(assets_dir):
         app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
+        print(f"[INFO] 已挂载 assets 目录: {assets_dir}")
+
+    @app.get("/")
+    async def serve_index():
+        """首页路由：返回 index.html"""
+        return FileResponse(os.path.join(STATIC_DIR, "index.html"))
 
     @app.get("/{full_path:path}")
     async def serve_spa(full_path: str):
@@ -61,6 +76,8 @@ if os.path.exists(STATIC_DIR):
         # 否则返回 index.html（SPA 路由）
         return FileResponse(os.path.join(STATIC_DIR, "index.html"))
 else:
+    print(f"[WARNING] 静态文件目录不存在: {STATIC_DIR}")
+
     @app.get("/")
     async def root():
         return {"message": "文学知识检索系统 API"}

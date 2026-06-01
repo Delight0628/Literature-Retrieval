@@ -37,8 +37,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # 复制后端源码
 COPY backend/ ./
 
-# 复制前端构建产物
-COPY --from=frontend-builder /app/frontend/dist ./frontend/dist
+# 复制前端构建产物到根目录的 dist 文件夹
+COPY --from=frontend-builder /app/frontend/dist ./dist
 
 # 创建数据目录
 RUN mkdir -p /app/backend/data
