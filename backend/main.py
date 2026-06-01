@@ -41,7 +41,25 @@ async def health():
 async def test_endpoint(data: dict):
     """测试端点：用于调试请求体解析问题"""
     print(f"[DEBUG] 收到测试请求: {data}")
-    return {"received": data, "status": "ok"}
+    # 尝试重新编码以修复中文字符问题
+    import json
+    try:
+        # 如果 data 中有乱码，尝试重新解码
+        fixed_data = {}
+        for k, v in data.items():
+            if isinstance(v, str):
+                # 尝试用 latin-1 解码后再用 utf-8 解码
+                try:
+                    fixed_v = v.encode('latin-1').decode('utf-8')
+                    fixed_data[k] = fixed_v
+                except:
+                    fixed_data[k] = v
+            else:
+                fixed_data[k] = v
+        return {"received": fixed_data, "status": "ok"}
+    except Exception as e:
+        print(f"[DEBUG] 修复字符编码失败: {e}")
+        return {"received": data, "status": "ok"}
 
 
 # 注册 API 路由
