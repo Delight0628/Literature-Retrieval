@@ -37,31 +37,6 @@ async def health():
     return {"status": "ok"}
 
 
-@app.post("/api/test")
-async def test_endpoint(data: dict):
-    """测试端点：用于调试请求体解析问题"""
-    print(f"[DEBUG] 收到测试请求: {data}")
-    # 尝试重新编码以修复中文字符问题
-    import json
-    try:
-        # 如果 data 中有乱码，尝试重新解码
-        fixed_data = {}
-        for k, v in data.items():
-            if isinstance(v, str):
-                # 尝试用 latin-1 解码后再用 utf-8 解码
-                try:
-                    fixed_v = v.encode('latin-1').decode('utf-8')
-                    fixed_data[k] = fixed_v
-                except:
-                    fixed_data[k] = v
-            else:
-                fixed_data[k] = v
-        return {"received": fixed_data, "status": "ok"}
-    except Exception as e:
-        print(f"[DEBUG] 修复字符编码失败: {e}")
-        return {"received": data, "status": "ok"}
-
-
 # 注册 API 路由
 app.include_router(search_router)
 app.include_router(knowledge_router)
@@ -74,17 +49,12 @@ STATIC_DIR = os.environ.get('STATIC_DIR', os.path.join(os.path.dirname(os.path.a
 if not os.path.exists(STATIC_DIR):
     STATIC_DIR = '/app/dist'
 
-# 打印静态文件目录路径（调试用）
-print(f"[INFO] 静态文件目录: {STATIC_DIR}")
-print(f"[INFO] 静态文件目录存在: {os.path.exists(STATIC_DIR)}")
-
 # 如果静态文件目录存在，挂载静态文件服务
 if os.path.exists(STATIC_DIR):
     # 挂载 assets 目录（JS、CSS 等静态资源）
     assets_dir = os.path.join(STATIC_DIR, "assets")
     if os.path.exists(assets_dir):
         app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
-        print(f"[INFO] 已挂载 assets 目录: {assets_dir}")
 
     @app.get("/")
     async def serve_index():
@@ -101,8 +71,6 @@ if os.path.exists(STATIC_DIR):
         # 否则返回 index.html（SPA 路由）
         return FileResponse(os.path.join(STATIC_DIR, "index.html"))
 else:
-    print(f"[WARNING] 静态文件目录不存在: {STATIC_DIR}")
-
     @app.get("/")
     async def root():
         return {"message": "文学知识检索系统 API"}

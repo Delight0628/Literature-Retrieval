@@ -62,15 +62,19 @@ async def search(request: SearchRequest):
     query = request.query.strip()
 
     # 1. 先从本地知识库搜索
-    results = search_works(query)
+    try:
+        results = search_works(query)
 
-    if results:
-        # 找到匹配的作品，返回模块列表
-        work = results[0]
-        modules_result = get_work_modules(work["id"])
-        return modules_result
+        if results:
+            work = results[0]
+            modules_result = get_work_modules(work["id"])
+            # 只有在成功获取模块数据时才返回
+            if "error" not in modules_result and "modules" in modules_result:
+                return modules_result
+    except Exception as e:
+        print(f"本地搜索失败: {e}")
 
-    # 2. 本地无缓存，触发爬虫
+    # 2. 本地无缓存或数据不完整，触发爬虫
     try:
         crawler = _get_crawler()
         crawler_result = crawler.search(query)
@@ -86,20 +90,20 @@ async def search(request: SearchRequest):
     except Exception as e:
         print(f"爬取失败: {e}")
 
-    # 3. 爬取也失败，返回空结果
+    # 3. 爬取也失败，返回默认模块列表
     return {
         "query": query,
         "modules": [
             {
                 "id": m["id"],
                 "name": m["name"],
-                "summary": "暂无概要信息",
+                "summary": "暂无概要信息，请点击获取详情",
                 "source": "系统默认",
                 "source_url": "",
             }
             for m in LITERARY_MODULES
         ],
-        "message": f"未找到与「{query}」相关的文学作品",
+        "message": f"未找到与「{query}」相关的本地缓存，可尝试点击模块获取详情",
     }
 
 
@@ -119,12 +123,15 @@ async def search_deep(request: DeepSearchRequest):
     module_id = request.module_id
 
     # 1. 先从本地知识库查询
-    results = search_works(query)
-    if results:
-        work = results[0]
-        detail = get_module_detail(work["id"], module_id)
-        if "content" in detail and detail["content"]:
-            return detail
+    try:
+        results = search_works(query)
+        if results:
+            work = results[0]
+            detail = get_module_detail(work["id"], module_id)
+            if "content" in detail and detail["content"] and "error" not in detail:
+                return detail
+    except Exception as e:
+        print(f"本地深度搜索失败: {e}")
 
     # 2. 本地无详情，触发爬虫
     try:
@@ -147,6 +154,7 @@ async def search_deep(request: DeepSearchRequest):
         "content": f"暂未找到关于「{query}」的{module_info['name']}详细信息。\n\n建议尝试其他关键词或稍后重试。",
         "sources": [],
         "images": [],
+        "word_count": 0,
     }
 
 
