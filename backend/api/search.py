@@ -190,9 +190,3 @@ async def download(request: DownloadRequest):
             "Content-Disposition": f"attachment; filename*=UTF-8''{encoded_filename}"
         },
     )
-
-
-@router.get("/health")
-async def health():
-    """健康检查"""
-    return {"status": "ok"}
