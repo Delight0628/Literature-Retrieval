@@ -52,5 +52,9 @@ temp/
 # 其他
 *.md
 !README.md
+!DEPLOY.md
 LICENSE
 LICENSE.txt
+
+# Railway
+.railway/

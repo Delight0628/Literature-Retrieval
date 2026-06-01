@@ -8,6 +8,8 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from api.search import router as search_router
 from api.knowledge import router as knowledge_router
 from dotenv import load_dotenv
@@ -23,25 +25,45 @@ app = FastAPI(
 # 配置 CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:3000"],
+    allow_origins=["*"],  # 生产环境允许所有来源
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# 注册路由
-app.include_router(search_router)
-app.include_router(knowledge_router)
-
-
-@app.get("/")
-async def root():
-    return {"message": "文学知识检索系统 API"}
-
 
 @app.get("/api/health")
 async def health():
     return {"status": "ok"}
+
+
+# 注册 API 路由
+app.include_router(search_router)
+app.include_router(knowledge_router)
+
+# 静态文件目录（前端构建产物）
+STATIC_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'frontend', 'dist')
+
+# 如果静态文件目录存在，挂载静态文件服务
+if os.path.exists(STATIC_DIR):
+    # 挂载 assets 目录（JS、CSS 等静态资源）
+    assets_dir = os.path.join(STATIC_DIR, "assets")
+    if os.path.exists(assets_dir):
+        app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
+
+    @app.get("/{full_path:path}")
+    async def serve_spa(full_path: str):
+        """SPA 路由回退：所有非 API 路由都返回 index.html"""
+        # 如果是具体的文件，直接返回
+        file_path = os.path.join(STATIC_DIR, full_path)
+        if full_path and os.path.isfile(file_path):
+            return FileResponse(file_path)
+        # 否则返回 index.html（SPA 路由）
+        return FileResponse(os.path.join(STATIC_DIR, "index.html"))
+else:
+    @app.get("/")
+    async def root():
+        return {"message": "文学知识检索系统 API"}
 
 
 if __name__ == "__main__":
